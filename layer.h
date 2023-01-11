@@ -25,7 +25,7 @@ public:
 	vector<vector<double>> sigmoid(vector<vector<double>> x);
 	vector < vector < double >> sigmoid_grad(vector<vector<double>> x);
 	vector<vector<double>> predict(vector<vector<double>> x);
-	vector<vector <double>> loss(vector<vector<double>> out, vector<vector<double>> y);
+	vector<vector <double>> mse_loss(vector<vector<double>> out, vector<vector<double>> y);
 	pair<
 		map <string, vector<vector<double>>>,
 		map <string, vector <double>>
@@ -35,5 +35,6 @@ public:
 
 	vector<vector<double>> relu(vector<vector<double>> x);
 	vector < vector < double >> relu_grad(vector<vector<double>> x);
+	void show_weight_bias();
 
 };

@@ -29,3 +29,5 @@ vector<vector<double>> make_bias_mat(int row_size, vector<double> A);
 vector<vector<double>> mat_scalr_mul(double v,vector<vector<double>> A);
 vector<double> vec_elem_sub(vector<double> A, vector<double> B);
 vector<double> vec_scalr_mul(double v, vector<double> A);
+vector<vector<double>> weight_init(int r_size, int c_size);
+void vecPrint(vector<double> A);
