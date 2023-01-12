@@ -12,7 +12,7 @@ using std::string;
 class layer {
 
 public:
-	vector<vector<double>> x_;
+	
 
 	vector<vector<double>> w1_;
 	vector<vector<double>> w2_;
@@ -36,5 +36,7 @@ public:
 	vector<vector<double>> relu(vector<vector<double>> x);
 	vector < vector < double >> relu_grad(vector<vector<double>> x);
 	void show_weight_bias();
-
+	vector<vector<double>> tanh(vector<vector<double>> x);
+	vector<vector<double>> tanh_grad(vector<vector<double>> x);
+	void bce_loss(vector<vector<double>> out, vector<vector<double>> y);
 };

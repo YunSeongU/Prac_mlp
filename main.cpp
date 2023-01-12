@@ -22,7 +22,7 @@ int main() {
     vector < vector<double>> tmp_2dim;
     vector<double> tmp_dim;
 
-    double lr = 0.001;
+    
 
     vector<vector<double>> inx = { //xor input
         {0,0},
@@ -36,10 +36,13 @@ int main() {
         {1},
         {0}
     };
+    
+    
+    double lr = 0.001;
 
     layer xor_mlp(2, 10, 1);// 생성자에 맞춰 객체 생성
  
-    for (int i = 0; i < 10001; i++) {
+    for (int i = 0; i < 15001; i++) {
         /*pair<map,map>*/grad_map = xor_mlp.process(inx, outy);
         /*map<문자열,행렬>*/grad_w = grad_map.first; //가중치 미분정보
         /*map<문자열,벡터>*/grad_b = grad_map.second; // 편향 미분정보
@@ -63,12 +66,25 @@ int main() {
 
         if (i % 1000 == 0) {
             cout << "epoch : " << i << " , " << "loss val : " << xor_mlp.loss_ << endl;
+
+
         }
 
     }
     xor_mlp.show_weight_bias(); //최종 가중치,바이어스 출력
     tmp_2dim = xor_mlp.predict(inx);//최종 가중치,바이어스로 만들어진 가설에 xor입력을 넣는다
     matPrint(tmp_2dim); //행렬 출력
+
+    for (int i = 0; i < tmp_2dim.size(); i++) {
+        if (tmp_2dim[i][0] > 0.5) {
+            cout << 1 << endl;
+        }
+        else {
+            cout << 0 << endl;
+        }
+    }
+    
+    
 }
 
 

@@ -15,19 +15,17 @@ vector<vector<double>> layer::sigmoid(vector<vector<double>> x) {
 
 //최종 w_,b_를 사용한 가설
 vector<vector<double>> layer::predict(vector<vector<double>> x) {
-	vector<vector<double>> affine1, active1, affine2, out,b1,b2;
+	vector<vector<double>> affine1, z1, affine2, out,b1,b2;
 
-	affine1 = matmul(x, w1_);
-	b1 = make_bias_mat(affine1.size(), b1_);
-	affine1 = addb(affine1, b1);
-	active1 = relu(affine1);
+	affine1 = matmul(x, w1_); // 4x2 2x10 = 4x10
+	b1 = make_bias_mat(affine1.size(), b1_);//1,10-->4x10
+	affine1 = addb(affine1, b1);//4x10 4x10 요소 합
+	z1 = relu(affine1); //4x10
 
-
-
-	affine2 = matmul(active1, w2_);
-	b2 = make_bias_mat(affine2.size(), b2_);
-	affine2 = addb(affine2, b2);
-	out = relu(affine2);
+	affine2 = matmul(z1, w2_);// 4x10 10x1 = 4x1
+	b2 = make_bias_mat(affine2.size(), b2_);//1x1 --> 4x1
+	affine2 = addb(affine2, b2);// 4x1 4x1 요소 합
+	out = sigmoid(affine2);// 4x1
 
 	return out;
 }
@@ -46,6 +44,24 @@ vector<vector <double>> layer::mse_loss(vector<vector<double>> out, vector<vecto
 	return diff;
 }
 
+
+void layer::bce_loss(vector<vector<double>> out, vector<vector<double>> y) {
+	int row1 = out.size(), col1 = out[0].size();
+	int row2 = y.size(), col2 = y[0].size();
+	if ((row1 == row2) and (col1 == col2)) {
+		double val = 0;
+		for (int r = 0; r < row1; r++) {
+			
+			for (int c = 0; c < col1; c++) {
+		        val += ((-y[r][c]) * std::log(out[r][c])) - ((1 - y[r][c]) * std::log(1 - out[r][c]));
+
+			}
+
+		}
+		loss_ = val / row1*col1;
+
+	}
+}
 
 //forward와 backward를 진행하는 함수
 //w,b미분 정보를 포함한 map을 반환한다
@@ -69,27 +85,41 @@ pair<
 	//forward
 	affine1 = matmul(x, w1_); // 4x2 2x10 = 4x10
 	b1 = make_bias_mat(affine1.size(), b1_);//1,10-->4x10
-	affine1 = addb(affine1, b1);//4x10
+	affine1 = addb(affine1, b1);//4x10 4x10 요소 합
 	z1 = relu(affine1); //4x10
 
 	affine2 = matmul(z1, w2_);// 4x10 10x1 = 4x1
 	b2 = make_bias_mat(affine2.size(), b2_);//1x1 --> 4x1
-	affine2 = addb(affine2, b2);// 4x1
-	out = relu(affine2);// 4x1
+	affine2 = addb(affine2, b2);// 4x1 4x1 요소 합
+	out = sigmoid(affine2);// 4x1
 
 	//backward
+	//MSE사용할때 -> relu+relu
+	/*
 	diff = mse_loss(out, y); // 4x1
-
 	dloss = mse_grad(diff); //4x1
-	dout = mat_element_mul(relu_grad(affine2), dloss); // 4x1 4x1 행렬 요소 곱 --> 4x1
-	grad_w["w2"] = matmul(T(z1), dout); //10x4 4x1 --> 10x1 
+	dout = mat_element_mul(sigmoid_grad(affine2), dloss); // 4x1 4x1 행렬 요소 곱 --> 4x1
+	grad_w["w2"] = matmul(T(z1), dout); //10x4 4x1 --> 10x1
 	grad_b["b2"] = sum_axis(dout, 0); // 4x1 --> 1x1
 
 	daffine1 = matmul(dout, T(w2_)); // 4x1 1x10 --> 4x10
 	dz1 = mat_element_mul(relu_grad(affine1), daffine1); //4x10 4x10 행렬 요소곱 --> 4x10
 	grad_w["w1"] = matmul(T(x), dz1); // 2x4 4x10 --> 2x10
 	grad_b["b1"] = sum_axis(dz1, 0); // 4x10 --> 1x10
+	*/
 
+	//BCE사용할때  -> relu+sigmoid
+	/*
+	bce_loss(out, y);
+	dloss = mat_element_sub(out, y);
+	grad_w["w2"] = matmul(T(z1), dloss); //10x4 4x1 --> 10x1 
+	grad_b["b2"] = sum_axis(dloss, 0); // 4x1 --> 1x1
+
+	daffine1 = matmul(dloss, T(w2_)); // 4x1 1x10 --> 4x10
+	dz1 = mat_element_mul(relu_grad(affine1), daffine1); //4x10 4x10 행렬 요소곱 --> 4x10
+	grad_w["w1"] = matmul(T(x), dz1); // 2x4 4x10 --> 2x10
+	grad_b["b1"] = sum_axis(dz1, 0); // 4x10 --> 1x10
+	*/
 	ret_p_wNb.first = grad_w; //pair의 첫번째에 w정보를 담고있는 <문자열,행렬> map을 저장
 	ret_p_wNb.second = grad_b; //pair의 두번째에 b정보를 담고있는  <문자열,벡터>map을 저장
 
@@ -98,18 +128,18 @@ pair<
 
 //시그모이드 미분 => (1.0 - sigmoid(x))sigmoid(x)
 vector <vector < double >> layer::sigmoid_grad(vector<vector<double>> x) {
-	vector<vector<double>> vec_sig = mat_sigmoid(x);
-	vector<vector<double>> minus_sig;
+	vector<vector<double>> sig = mat_sigmoid(x); //sigmoid(x)
+	vector<vector<double>> retm;
 	vector<double> tmp;
 	int row = x.size(), col = x[0].size();
 	for (int r = 0; r < row; r++) {
 		tmp.clear();
 		for (int c = 0; c < col; c++) {
-			tmp.push_back(1.0 - vec_sig[r][c]);
+			tmp.push_back((1.0 - sig[r][c])*sig[r][c]); //(1.0 - sigmoid(x))sigmoid(x)
 		}
-		minus_sig.push_back(tmp);
+		retm.push_back(tmp);
 	}
-	return mat_element_mul(vec_sig, minus_sig);
+	return retm;
 
 }
 // 행열 요소마다 x>0 ? x : 0
@@ -160,4 +190,39 @@ void layer::show_weight_bias() {
 	vecPrint(b1_);
 	std::cout << " bias2 : ";
 	vecPrint(b2_);
+}
+
+
+vector<vector<double>> layer::tanh(vector<vector<double>> x) {
+	int row = x.size(); int col = x[0].size();
+	vector<double> tmp;
+	vector<vector<double>> retm;
+	double exp_plus, exp_minus, val;
+	for (int r = 0; r < row; r++) {
+		tmp.clear();
+		for (int c = 0; c < col; c++) {
+			exp_plus = std::exp(x[r][c]);
+			exp_minus = std::exp(-x[r][c]);
+			val = (exp_plus - exp_minus) / (exp_plus + exp_minus);
+			tmp.push_back(val);
+		}
+		retm.push_back(tmp);
+	}
+	return retm;
+}
+
+vector<vector<double>> layer::tanh_grad(vector<vector<double>> x) {
+	int row = x.size(); int col = x[0].size();
+	vector<double> tmp;
+	vector<vector<double>> retm;
+	double exp_plus, exp_minus, val;
+	for (int r = 0; r < row; r++) {
+		tmp.clear();
+		for (int c = 0; c < col; c++) {
+			val = 4 / ( (std::exp(2*x[r][c])) + 2 + (std::exp(-2 * x[r][c])) );
+			tmp.push_back(val);
+		}
+		retm.push_back(tmp);
+	}
+	return retm;
 }
