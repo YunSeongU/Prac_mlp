@@ -8,7 +8,7 @@ using std::endl;
 
 
 //행렬 곱연산
-vector <vector <double>> matmul(vector<vector<double>> A, vector<vector<double>> B) { 
+vector <vector <double>> matmul(const vector<vector<double>> &A, const vector<vector<double>> &B) { 
 	int row1 = A.size(), col1 = A[0].size();
 	int row2 = B.size(), col2 = B[0].size();
 	vector<vector<double>> matrix(row1, vector<double>(col2));
@@ -26,11 +26,9 @@ vector <vector <double>> matmul(vector<vector<double>> A, vector<vector<double>>
 	else { //행렬 곱을 위한 조건(A행렬의 열과 B행렬의 행의수가 같아야함)을 만족하지 않을때
 		cout << "ValueError : (n?,k),(k,m?)->(n?,m?)" << "(size " << col1 << " is different from " << row2 << ")" << endl;
 	}
-
-	
-
-	
 }
+
+
 //2차원 행렬 출력
 void matPrint(vector<vector<double>> A) {
 	int row1 = A.size(), col1 = A[0].size();
@@ -43,7 +41,7 @@ void matPrint(vector<vector<double>> A) {
 	cout << "ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ" << endl;
 }
 // 행렬 전치
-vector <vector <double>> T(vector<vector<double>>A) {
+vector <vector <double>> T(vector<vector<double>>&A) {
 	int row = A.size(), col = A[0].size();
 	int i = 0; int j = 0;
 	vector<vector<double>> retm(col, vector<double>(row));
@@ -58,31 +56,10 @@ vector <vector <double>> T(vector<vector<double>>A) {
 
 }
 
-//편향벡터 더하기 
-vector<vector<double>> addb(vector<vector<double>> arr1, vector<vector<double>> arr2) {
-	vector<vector<double>> answer;
-	vector<double> temp;
-	int r1 = arr1.size(); int c1 = arr1[0].size();
-	int r2 = arr2.size(); int c2 = arr2[0].size();
 
-	if ((r1 == r2) and (c1 == c2)) {
-		for (int i = 0; i < arr1.size(); i++)
-		{
-			temp.clear();
-			for (int j = 0; j < arr1[i].size(); j++)
-			{
-				temp.push_back(arr1[i][j] + arr2[i][j]); //요소 합 반환
-			}
-			answer.push_back(temp);
-		}
-		return answer;
-	}
-	else {
-		cout << "addb :: size mismatch " << endl;
-	}
-}
+
 //축에따라 값더하기, bias역전파에 사용(gradient 구할때 행방향 합)
-vector <double> sum_axis(vector<vector<double>> A, int axis) {
+vector <double> sum_axis(const vector<vector<double>> &A, int axis) {
 	vector <double> retv;
 	if (axis==0){
 		int row = A.size(); int col = A[0].size();
@@ -111,7 +88,7 @@ vector <double> sum_axis(vector<vector<double>> A, int axis) {
 	
 
 //행렬 요소 곱 --> 활성화함수 gradient에 사용
-vector<vector<double>> mat_element_mul(vector<vector<double>> A, vector<vector<double>> B) {
+vector<vector<double>> mat_element_mul(const vector<vector<double>>& A, const vector<vector<double>>& B) {
 	
 	int row1 = A.size(), col1 = A[0].size();
 	int row2 = B.size(), col2 = B[0].size();
@@ -132,7 +109,7 @@ vector<vector<double>> mat_element_mul(vector<vector<double>> A, vector<vector<d
 
 }
 //행렬 요소 차 --> mse에 사용
-vector<vector<double>> mat_element_sub(vector<vector<double>> A, vector<vector<double>> B) {
+vector<vector<double>> mat_element_sub(const vector<vector<double>>& A, const vector<vector<double>>& B) {
 	int row1 = A.size(), col1 = A[0].size();
 	int row2 = B.size(), col2 = B[0].size();
 	vector<vector<double>> retMat;
@@ -148,24 +125,11 @@ vector<vector<double>> mat_element_sub(vector<vector<double>> A, vector<vector<d
 		return retMat;
 	}
 }
-//행렬 요소별 시그모이드 함수 적용
-vector < vector < double >> mat_sigmoid(vector<vector<double>> A) {
-	int row = A.size(), col = A[0].size();
-	vector<vector<double>> sigm;
-	vector<double> tmp;
-	for (int r = 0; r < row; r++) {
-		tmp.clear();
-		for (int c = 0; c < col; c++) {
-			tmp.push_back(1 / (1 + std::exp(-A[r][c])));
-		}
-		sigm.push_back(tmp);
-	}
-	return sigm;
-}
+
 
 
 //행렬 요소 제곱 --> mse
-vector<double> mat_square(vector<vector<double>> A) {
+vector<double> mat_square(vector<vector<double>> &A) {
 	int row = A.size(), col = A[0].size();
 	vector<double> tmp;
 	for (int r = 0; r < row; r++) {
@@ -186,28 +150,15 @@ vector<vector<double>> mse_grad(vector<vector<double>> A) {
 	for (int r = 0; r < row; r++) {
 		tmp.clear();
 		for (int c = 0; c < col; c++) {
-			tmp.push_back((2.0*A[r][c])/div);
+			tmp.push_back((2.0*A[r][c])/div); // 2*diff / row*col
 		}
 		retm.push_back(tmp);
 	}
 	return retm;
 }
-//vector인 bias를 연산을위해 복제하여 행렬로 만듬
-vector<vector<double>> make_bias_mat(int row_size, vector<double> A) {
-	vector<vector<double>> retm;
-	vector<double> tmp;
-	int col = A.size();
-	for (int r = 0; r < row_size; r++) {
-		tmp.clear();
-		for (int c = 0; c < col; c++) {
-			tmp.push_back(A[c]);
-		}
-		retm.push_back(tmp);
-	}
-	return retm;
-}
+
 //행렬과 스칼라의 곱 --> learning_rate적용에 사용
-vector<vector<double>> mat_scalr_mul(double v,vector<vector<double>> A) {
+vector<vector<double>> mat_scalr_mul(double v,vector<vector<double>> &A) {
 	int row = A.size(), col = A[0].size();
 	vector<vector<double>> retm;
 	vector<double> tmp;
@@ -221,7 +172,7 @@ vector<vector<double>> mat_scalr_mul(double v,vector<vector<double>> A) {
 	return retm;
 }
 //벡터 요소 차 --> bias 업데이트에 사용
-vector<double> vec_elem_sub(vector<double> A, vector<double> B) {
+vector<double> vec_elem_sub(vector<double> A, vector<double> &B) {
 	vector<double> retvec;
 	int size_a = A.size(); int size_b = B.size();
 	if (size_a == size_b) {
@@ -235,7 +186,7 @@ vector<double> vec_elem_sub(vector<double> A, vector<double> B) {
 	}
 }
 //벡터와 스칼라의 곱 --> learning_rate적용에 사용
-vector<double> vec_scalr_mul(double v, vector<double> A) {
+vector<double> vec_scalr_mul(double v, vector<double> &A) {
 	int row = A.size();
 	vector<double> tmp;
 	for (int s = 0; s < row; s++) {
@@ -267,4 +218,25 @@ void vecPrint(vector<double> A) {
 		cout << A[i] << " ";
 	}
 	cout << endl;
+}
+
+vector<vector<double>> add_bias(vector<vector<double>>& arr1, vector<double>& arr2) {
+	vector<vector<double>> retm;
+	vector<double> tmp;
+	int r1 = arr1.size(); int c1 = arr1[0].size(); int vec_size = arr2.size();
+	if (c1 == vec_size) { //열 크기와 벡터크기가 같아야함
+		for (int r = 0; r < r1; r++) {
+			tmp.clear();
+			for (int c = 0; c < c1; c++) {
+				tmp.push_back(arr1[r][c] + arr2[c]);
+			}
+			retm.push_back(tmp);
+		}
+		return retm;
+	}
+	else {
+		cout << c1 << " " << vec_size << " mismatch" << endl;
+		vector<vector<double>> a(r1, vector<double>(c1, 0));
+		return a;
+	}
 }

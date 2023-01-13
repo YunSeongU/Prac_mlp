@@ -2,6 +2,7 @@
 #include <vector>
 #include "layer.h"
 #include "matrix.h"
+#include <chrono>
 
 using std::vector;
 using std::cout;
@@ -10,7 +11,7 @@ using std::endl;
 void vecPrint(vector<double> A);
 
 int main() {
-
+    std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
     pair<
         map <string, vector<vector<double>>>,
         map <string, vector <double>>
@@ -43,7 +44,8 @@ int main() {
     layer xor_mlp(2, 10, 1);// 생성자에 맞춰 객체 생성
  
     for (int i = 0; i < 15001; i++) {
-        /*pair<map,map>*/grad_map = xor_mlp.process(inx, outy);
+        /*pair<map,map>*/grad_map = xor_mlp.process(inx, outy); //process -> forward ~ backward
+
         /*map<문자열,행렬>*/grad_w = grad_map.first; //가중치 미분정보
         /*map<문자열,벡터>*/grad_b = grad_map.second; // 편향 미분정보
 
@@ -83,8 +85,8 @@ int main() {
             cout << 0 << endl;
         }
     }
-    
-    
+    std::chrono::duration<double>sec = std::chrono::system_clock::now() - start;
+    std::cout << "layer_use_refer를 돌리는데 걸리는 시간(초) : " << sec.count() << "seconds" << std::endl;
 }
 
 
